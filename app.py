@@ -13,11 +13,11 @@ if not API_KEY:
 
 API_URL = "https://api.perplexity.ai/chat/completions"
 
+
 def get_medicine_info(medicine_name):
-    """Fetch drug info from RxNav API; fallback to Wikipedia summary if RxNav lacks description."""
+    """Fetch drug info from RxNav API; fallback to Wikipedia link if RxNav lacks info."""
     info = {
         "name": medicine_name,
-        "description": "No description available.",
         "link": f"https://en.wikipedia.org/wiki/{medicine_name.replace(' ', '_').capitalize()}"
     }
 
@@ -31,28 +31,11 @@ def get_medicine_info(medicine_name):
             if concept_group:
                 concept = concept_group[0]['conceptProperties'][0]
                 info['name'] = concept.get("synonym", medicine_name)
-                rxcui = concept.get("rxcui")
-
-                # Step 2: Get description from RxNav
-                if rxcui:
-                    desc_url = f"https://rxnav.nlm.nih.gov/REST/rxcui/{rxcui}/properties.json"
-                    desc_resp = requests.get(desc_url)
-                    if desc_resp.status_code == 200:
-                        prop = desc_resp.json().get("properties", {})
-                        if "definition" in prop:
-                            info["description"] = prop["definition"]
-
-        # Fallback to Wikipedia summary if no RxNav description
-        if info["description"] == "No description available.":
-            wiki_resp = requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{medicine_name.replace(' ', '_')}")
-            if wiki_resp.status_code == 200:
-                wiki_data = wiki_resp.json()
-                if 'extract' in wiki_data:
-                    info['description'] = wiki_data['extract']
+                # The link remains the same; no description is fetched or stored
     except Exception as e:
         print(f"Error fetching info for {medicine_name}: {e}")
 
-    return info
+    return info
 
 
 
